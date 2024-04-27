@@ -1,2 +1,2 @@
-# pagila-hw
-[![](https://github.com/KentaWood/CRUD_Web/workflows/tests/badge.svg)](https://github.com/KentaWood/CRUD_Web/actions?query=workflow%3Atests)
+# CRUD_Web
+[![Docker-Web](https://github.com/KentaWood/CRUD_Web/actions/workflows/docker-image.yml/badge.svg)](https://github.com/KentaWood/CRUD_Web/actions/workflows/docker-image.yml)
