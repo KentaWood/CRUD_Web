@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .content {
+        margin: 20px;
+        font-family: 'Arial', sans-serif;
+        color: #333;
+    }
+    h2 {
+        color: #4a90e2;
+    }
+    p {
+        font-size: 16px;
+        line-height: 1.5;
+    }
+    .tweet-container {
+        background-color: #fff;
+        border: 1px solid #e1e4e8;
+        padding: 20px;
+        margin-top: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.3s ease-in-out;
+    }
+    .tweet-container:hover {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    }
+    .tweet-username {
+        color: #4a90e2;
+        font-weight: bold;
+    }
+    .tweet-time {
+        color: #999;
+        font-size: 0.85em;
+        margin-top: 5px;
+    }
+    .pagination {
+        text-align: left;
+        margin: 20px 0;
+    }
+    .page-link {
+        display: inline-block;
+        padding: 8px 16px;
+        margin-right: 8px;
+        background-color: #4a90e2;
+        color: white;
+        border-radius: 5px;
+        text-decoration: none;
+        transition: background-color 0.3s;
+    }
+    .page-link:hover {
+        background-color: #357abd;
+    }
+</style>
+<div class="content">
+    <h2>Home</h2>
+    <p>Welcome to the Twitter clone. Here are the most recent tweets:</p>
+    
+    <!-- Pagination controls at the top -->
+    <div class="pagination">
+        {% if current_page > 1 %}
+            <a href="{{ url_for('root', page=current_page-1) }}" class="page-link">Previous</a>
+        {% endif %}
+        <a href="{{ url_for('root', page=current_page+1) }}" class="page-link">Next</a>
+    </div>
+    
+    <div>
+        {% for tweet in tweets %}
+            <div class="tweet-container">
+                <p>{{ tweet.text }}</p>
+                <div class="tweet-username">{{ tweet.username }}</div>
+                <div class="tweet-time">{{ tweet.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Optional: Pagination controls at the bottom -->
+    <div class="pagination">
+        {% if current_page > 1 %}
+            <a href="{{ url_for('root', page=current_page-1) }}" class="page-link">Previous</a>
+        {% endif %}
+        <a href="{{ url_for('root', page=current_page+1) }}" class="page-link">Next</a>
+    </div>
+</div>
+{% endblock %}

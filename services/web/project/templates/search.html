@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .tweet-container {
+        background-color: #fff;
+        border: 1px solid #e1e4e8;
+        padding: 20px;
+        margin-top: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.3s ease-in-out;
+    }
+    .tweet-container:hover {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    }
+    .tweet-details {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 12px;
+        font-size: 0.9em;
+        color: #666;
+    }
+    .tweet-username {
+        color: #4a90e2;
+        font-weight: bold;
+    }
+    .tweet-time {
+        color: #999;
+    }
+    .search-input, .search-button {
+        padding: 8px 16px;
+        margin: 5px 0;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+    .search-button {
+        background-color: #4a90e2;
+        color: white;
+        cursor: pointer;
+    }
+    .search-button:hover {
+        background-color: #357abd;
+    }
+</style>
+
+<div class="content">
+    <h2>Search Results for "{{ keyword }}"</h2>
+    <form action="/search" method="get" class="search-form">
+        <input type="text" name="keyword" value="{{ keyword }}" placeholder="Search tweets..." class="search-input">
+        <button type="submit" class="search-button">Search</button>
+    </form>
+
+    {% if tweets %}
+        {% for tweet in tweets %}
+            <div class="tweet-container">
+                <p>{{ tweet.text }}</p>
+                <div class="tweet-details">
+                    <span class="tweet-username">{{ tweet.username }}</span>
+                    <span class="tweet-time">{{ tweet.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No messages!</p>
+    {% endif %}
+
+    <div class="pagination">
+        {% if current_page > 1 %}
+            <a href="/search?keyword={{ keyword }}&page={{ current_page - 1 }}" class="page-link">Previous</a>
+        {% endif %}
+        {% if current_page < total_pages %}
+            <a href="/search?keyword={{ keyword }}&page={{ current_page + 1 }}" class="page-link">Next</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

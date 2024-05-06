@@ -16,9 +16,11 @@ services:
     depends_on:
       - db
   db:
-    image: postgres:13
+    build: services/db
     volumes:
-      - postgres_data_prod:/var/lib/postgresql/data/
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - 5432:5432
     env_file:
       - ./.env.prod.db
   nginx:
@@ -32,6 +34,6 @@ services:
       - web
 
 volumes:
-  postgres_data_prod:
+  postgres_data:
   static_volume:
   media_volume:

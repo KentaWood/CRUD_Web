@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS40 Twitter Clone</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            color: #4a90e2;
+        }
+        ol {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        a {
+            text-decoration: none;
+            color: #4a90e2;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Alex's Twitter Clone :)</h1>
+    <ol>
+        <li><a href='/'>Home</a></li>
+        {% if logged_in %}
+        <li><a href='/logout'>Logout</a></li>
+        <li><a href='/create_message'>Create Message</a></li>
+        {% else %}
+        <li><a href='/login'>Login</a></li>
+        <li><a href='/create_user'>Create User</a></li>
+        {% endif %}
+        <li><a href='/search'>Search</a></li>
+    </ol>
+
+    {% block content %}
+    {% endblock %}
+</body>
+</html>
