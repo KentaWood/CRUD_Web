@@ -20,4 +20,4 @@ jobs:
           git submodule update
           docker-compose -f docker-compose.prod.yml up -d --build
           docker ps -a
-          sh load_test.sh
+  
