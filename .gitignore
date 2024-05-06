@@ -1,8 +1,8 @@
 *.pyc
 __pycache
 .DS_Store
+.env.prod
 .env.prod.db
-.env*
 
 *.swp
 *.swo
