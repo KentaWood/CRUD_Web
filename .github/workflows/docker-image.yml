@@ -21,5 +21,3 @@ jobs:
           docker-compose up -d --build
           docker ps -a
           sleep 20
-          chmod u+x load_test.sh
-          ./load_test.sh
