@@ -42,6 +42,10 @@
     .search-button:hover {
         background-color: #357abd;
     }
+    mark {
+        background-color: yellow;
+        color: black;
+    }
 </style>
 
 <div class="content">
@@ -54,7 +58,7 @@
     {% if tweets %}
         {% for tweet in tweets %}
             <div class="tweet-container">
-                <p>{{ tweet.text }}</p>
+                <p>{{ tweet.text | safe }}</p>
                 <div class="tweet-details">
                     <span class="tweet-username">{{ tweet.username }}</span>
                     <span class="tweet-time">{{ tweet.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</span>
@@ -62,7 +66,7 @@
             </div>
         {% endfor %}
     {% else %}
-        <p>No messages!</p>
+        <p>No messages found.</p>
     {% endif %}
 
     <div class="pagination">

@@ -14,6 +14,9 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine, text  # Ensure text is also imported here
 import sqlalchemy
 import secrets
+import re
+from sqlalchemy import create_engine, text
+
 
 
 
@@ -63,9 +66,77 @@ def root():
     tweets = result.fetchall()
     connection.close()
     
+    username = request.cookies.get('username')
+    password = request.cookies.get('password')
+    print('username=', username)
+    print('password=', password)
+
+    good_credentials = are_credentials_good(username, password)
+    print('good_credentials=', good_credentials)
+    
+    
+    
 
     # Render the template with tweets
-    return render_template('root.html', tweets=tweets, current_page=page)
+    return render_template('root.html', logged_in=good_credentials, tweets=tweets, current_page=page)
+
+@app.route('/login', methods=['GET', 'POST'])     
+def login():
+    print_debug_info()
+    # requests (plural) library for downloading;
+    # now we need request singular 
+    username = request.form.get('username')
+    password = request.form.get('password')
+    print('username=', username)
+    print('password=', password)
+
+    good_credentials = are_credentials_good(username, password)
+    print('good_credentials=', good_credentials)
+
+    # the first time we've visited, no form submission
+    if username is None:
+        return render_template('login.html', bad_credentials=False)
+
+    # they submitted a form; we're on the POST method
+    else:
+        if not good_credentials:
+            return render_template('login.html', bad_credentials=True)
+        else:
+            # if we get here, then we're logged in
+            #return 'login successful'
+            
+            # create a cookie that contains the username/password info
+            template = render_template(
+                'root.html', 
+                bad_credentials=False,
+                logged_in=True,
+                username=username,
+                password=password)
+            
+            #return template
+            response = make_response(template)
+            
+            response.set_cookie('username', username)
+            response.set_cookie('password', password)
+            return response
+
+# scheme://hostname/path
+# the @app.route defines the path
+# the hostname and scheme are given to you in the output of the triangle button
+# for settings, the url is http://127.0.0.1:5000/logout to get this route
+@app.route('/logout')     
+def logout():
+    print_debug_info()
+    # Initialize the response object by redirecting to the home page
+    response = redirect(url_for('root'))
+
+    # Clear cookies by setting them to expire immediately
+    response.set_cookie('username', '', expires=0)
+    response.set_cookie('password', '', expires=0)
+
+
+    # Return the response object that includes the cookie clearing and redirection
+    return response
 
 
 def print_debug_info():
@@ -106,70 +177,7 @@ def are_credentials_good(username, password):
     return count > 0
 
 
-@app.route('/login', methods=['GET', 'POST'])     
-def login():
-    print_debug_info()
-    # requests (plural) library for downloading;
-    # now we need request singular 
-    username = request.form.get('username')
-    password = request.form.get('password')
-    print('username=', username)
-    print('password=', password)
-
-    good_credentials = are_credentials_good(username, password)
-    print('good_credentials=', good_credentials)
-
-    # the first time we've visited, no form submission
-    if username is None:
-        return render_template('login.html', bad_credentials=False)
-
-    # they submitted a form; we're on the POST method
-    else:
-        if not good_credentials:
-            return render_template('login.html', bad_credentials=True)
-        else:
-            # if we get here, then we're logged in
-            #return 'login successful'
-            
-            # create a cookie that contains the username/password info
-            template = render_template(
-                'logged.html', 
-                bad_credentials=False,
-                logged_in=True,
-                username=username,
-                password=password)
-            
-            #return template
-            response = make_response(template)
-            response.set_cookie('username', username)
-            response.set_cookie('password', password)
-            return response
-
-# scheme://hostname/path
-# the @app.route defines the path
-# the hostname and scheme are given to you in the output of the triangle button
-# for settings, the url is http://127.0.0.1:5000/logout to get this route
-@app.route('/logout')     
-def logout():
-    print_debug_info()
-    # 'error' # this will throw an error
-    
-    template = render_template(
-            'root.html',
-            bad_credentials=True,
-            logged_in=False
-    )
-    #return template
-    response = make_response(template)
-    response.set_cookie('username', '')
-    response.set_cookie('password', '')
-    return response
-
 # 403 error code
-
-from flask import redirect, url_for, render_template, request
-import sqlalchemy
-from sqlalchemy import create_engine, text
 
 @app.route('/create_message', methods=['GET', 'POST'])
 def create_message():
@@ -179,6 +187,9 @@ def create_message():
     # Getting the username and password from cookies
     username = request.cookies.get('username')
     password = request.cookies.get('password')
+    
+    good_credentials = are_credentials_good(username, password)
+    print('good_credentials=', good_credentials)
     
     # Only process if a message is submitted
     if request.method == 'POST' and message:
@@ -205,13 +216,13 @@ def create_message():
             connection.close()
             
             render_template('create_message.html')
-            return redirect(url_for('root'))  # Redirect to the home page to see the new tweet
+            return redirect(url_for('root')) # Redirect to the home page to see the new tweet
         else:
             connection.close()
-            return render_template('create_message.html', error="Invalid user credentials.")
+            return render_template('create_message.html', logged_in=good_credentials, error="Invalid user credentials.")
     
     # If GET request or no data submitted, show the form
-    return render_template('create_message.html')
+    return render_template('create_message.html',logged_in=good_credentials)
 
 
     
@@ -224,19 +235,17 @@ def create_user():
     
     # the first time we've visited, no form submission
     if username is None:
-        return render_template('create_user.html')
+        return render_template('create_user.html', bad_insert=False)
     
     elif password != password_confirm:
         print("DIFFERENT PASSWORDS")
-        return render_template('create_user.html')
+        return render_template('create_user.html',bad_insert=True)
 
     else:
         # Create an SQLAlchemy engine using the specified database connection string
         engine = sqlalchemy.create_engine(db_connection)
         connection = engine.connect()
-        
-        import secrets
-
+    
         # Generate a random integer within the specified range
         id_users = secrets.randbits(63)  # 63 bits to fit within the range
 
@@ -274,42 +283,24 @@ def create_user():
 
         # Here you would add logic to verify the passwords match
         # and handle the creation of a new user, possibly saving to a database
-        
-
-
-
                 
-        template = render_template(
-                'logged.html', 
-                bad_credentials=False,
-                logged_in=True,
-                username=username,
-                password=password)
+        response = redirect(url_for('root'))
+            
         
-        #return template
-        response = make_response(template)
         response.set_cookie('username', username)
         response.set_cookie('password', password)
-        
         return response
+
     
 @app.route('/search', methods=['GET'])
 def search():
-    # Retrieve the search keyword from the query parameter, defaulting to an empty string if not provided
-    keyword = request.args.get('keyword', '')
-
-    # Retrieve the page number, default to 1 if not provided
+    keyword = request.args.get('keyword', '').strip()
     page = request.args.get('page', 1, type=int)
-
-    # Calculate the offset for pagination
     offset = (page - 1) * 20
 
-    # Establish a database connection
     engine = create_engine(db_connection)
     connection = engine.connect()
 
-    # SQL query to find tweets containing the keyword, ordered by creation time, and paginated
-    # Now includes a join with the users table to fetch the username
     sql_query = text("""
         SELECT t.text, t.created_at, u.username
         FROM tweets t
@@ -318,25 +309,28 @@ def search():
         ORDER BY t.created_at DESC
         LIMIT 20 OFFSET :offset;
     """)
-
-    # Execute the query with placeholders for keyword (wrapped in % for SQL LIKE operation) and offset
     result = connection.execute(sql_query, {'keyword': f'%{keyword}%', 'offset': offset})
-    tweets = result.fetchall()
-    
-    # Calculate the total number of pages based on the total number of matching tweets (for navigation purposes)
+    tweets = [{'text': re.sub(f"({keyword})", r"<mark>\1</mark>", tweet.text, flags=re.IGNORECASE),
+               'username': tweet.username,
+               'created_at': tweet.created_at} for tweet in result.fetchall()]
+
     count_query = text("""
         SELECT COUNT(*)
         FROM tweets t
         JOIN users u ON t.id_users = u.id_users
         WHERE t.text LIKE :keyword;
     """)
-    count_result = connection.execute(count_query, {'keyword': f'%{keyword}%'})
-    total_tweets = count_result.scalar()
-    total_pages = (total_tweets + 19) // 20  # Ensures rounding up
+    total_tweets = connection.execute(count_query, {'keyword': f'%{keyword}%'}).scalar()
+    total_pages = (total_tweets + 19) // 20
 
     connection.close()
     
-    # Render the template with the search results, current page, and total pages
-    return render_template('search.html', tweets=tweets, current_page=page, total_pages=total_pages, keyword=keyword)
+    username = request.cookies.get('username')
+    password = request.cookies.get('password')
+    print('username=', username)
+    print('password=', password)
 
-
+    good_credentials = are_credentials_good(username, password)
+    print('good_credentials=', good_credentials)
+    
+    return render_template('search.html', logged_in=good_credentials, tweets=tweets, current_page=page, total_pages=total_pages, keyword=keyword)
