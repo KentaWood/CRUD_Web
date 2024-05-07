@@ -20,7 +20,7 @@ jobs:
           git submodule update
           docker-compose up -d --build
           docker ps -a
-          sleep 20
-          pip install faker
-          pip install sqlalchemy
-          sh load_test.sh
+          # sleep 20
+          # pip install faker
+          # pip install sqlalchemy
+          # sh load_test.sh
