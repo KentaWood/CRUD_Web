@@ -9,14 +9,14 @@ from flask import (
     make_response
 )
 
-from flask import Flask, jsonify, send_from_directory, request, render_template, make_response,redirect, url_for
+from flask import Flask, jsonify, send_from_directory, request, render_template, make_response,redirect, url_for,flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine, text  # Ensure text is also imported here
+from sqlalchemy.sql import text
 import sqlalchemy
 import secrets
 import re
 from sqlalchemy import create_engine, text
-
 
 
 
@@ -92,6 +92,9 @@ def login():
 
     good_credentials = are_credentials_good(username, password)
     print('good_credentials=', good_credentials)
+    
+    # Get page number from query parameter (default is 1 if not specified)
+    page = request.args.get('page', 1, type=int)
 
     # the first time we've visited, no form submission
     if username is None:
@@ -106,16 +109,9 @@ def login():
             #return 'login successful'
             
             # create a cookie that contains the username/password info
-            template = render_template(
-                'root.html', 
-                bad_credentials=False,
-                logged_in=True,
-                username=username,
-                password=password)
+            response = redirect(url_for('root'))
             
-            #return template
-            response = make_response(template)
-            
+                        
             response.set_cookie('username', username)
             response.set_cookie('password', password)
             return response
@@ -233,28 +229,32 @@ def create_user():
     password = request.form.get('password')
     password_confirm = request.form.get('password_confirm')
     
-    # the first time we've visited, no form submission
-    if username is None:
-        return render_template('create_user.html', bad_insert=False)
-    
-    elif password != password_confirm:
-        print("DIFFERENT PASSWORDS")
-        return render_template('create_user.html',bad_insert=True)
+    # First time visit, no form submission
+    if request.method == 'GET':
+        return render_template('create_user.html', error=None)
 
+    # Check if passwords match
+    if password != password_confirm:
+        return render_template('create_user.html', error='Passwords do not match.')
+    
     else:
-        # Create an SQLAlchemy engine using the specified database connection string
+
+        # Create SQLAlchemy engine
         engine = sqlalchemy.create_engine(db_connection)
         connection = engine.connect()
-    
+        
+        # Check if username already exists
+        user_count_query = text("SELECT COUNT(*) FROM users WHERE username = :username")
+        user_count_result = connection.execute(user_count_query, {"username": username}).scalar()
+
+        if user_count_result > 0:
+            connection.close()
+            return render_template('create_user.html', error='Username already exists.')
         # Generate a random integer within the specified range
         id_users = secrets.randbits(63)  # 63 bits to fit within the range
 
         # Add an offset to fit the lower bound of the range
         id_users += 10000000000000
-
-        print(id_users)
-        print(username)
-        print(password)        
 
         # Define an SQL query to insert a new user with a random UUID as id_users
         sql_query = text("""
@@ -262,31 +262,12 @@ def create_user():
             VALUES (:id_user, :username, :password)
         """)
         
-        
-        # sql_query = text("""
-        #     INSERT INTO users (id_users, username, password)
-        #     VALUES (12321341242124,'test', 'test')
-        # """)
-        
-        print(sql_query)
-        
-        
-        connection.execute(sql_query, {"id_user": id_users ,"username": username, "password": password})
+        connection.execute(sql_query, {"id_user": id_users, "username": username, "password": password})
         
         connection.commit()
-        # connection.execute(sql_query)
-    
-        
         connection.close()
 
-
-
-        # Here you would add logic to verify the passwords match
-        # and handle the creation of a new user, possibly saving to a database
-                
         response = redirect(url_for('root'))
-            
-        
         response.set_cookie('username', username)
         response.set_cookie('password', password)
         return response
@@ -297,34 +278,38 @@ def search():
     keyword = request.args.get('keyword', '').strip()
     page = request.args.get('page', 1, type=int)
     offset = (page - 1) * 20
+    tweets = []  # Initialize tweets as an empty list
+    total_pages = 0  # Initialize total_pages as 0
 
-    engine = create_engine(db_connection)
-    connection = engine.connect()
+    # Only search the database if there is a keyword
+    if keyword:
+        engine = create_engine(db_connection)
+        connection = engine.connect()
 
-    sql_query = text("""
-        SELECT t.text, t.created_at, u.username
-        FROM tweets t
-        JOIN users u ON t.id_users = u.id_users
-        WHERE t.text LIKE :keyword
-        ORDER BY t.created_at DESC
-        LIMIT 20 OFFSET :offset;
-    """)
-    result = connection.execute(sql_query, {'keyword': f'%{keyword}%', 'offset': offset})
-    tweets = [{'text': re.sub(f"({keyword})", r"<mark>\1</mark>", tweet.text, flags=re.IGNORECASE),
-               'username': tweet.username,
-               'created_at': tweet.created_at} for tweet in result.fetchall()]
+        sql_query = text("""
+            SELECT t.text, t.created_at, u.username
+            FROM tweets t
+            JOIN users u ON t.id_users = u.id_users
+            WHERE t.text LIKE :keyword
+            ORDER BY t.created_at DESC
+            LIMIT 20 OFFSET :offset;
+        """)
+        result = connection.execute(sql_query, {'keyword': f'%{keyword}%', 'offset': offset})
+        tweets = [{'text': re.sub(f"({keyword})", r"<mark>\1</mark>", tweet.text, flags=re.IGNORECASE),
+                   'username': tweet.username,
+                   'created_at': tweet.created_at} for tweet in result.fetchall()]
 
-    count_query = text("""
-        SELECT COUNT(*)
-        FROM tweets t
-        JOIN users u ON t.id_users = u.id_users
-        WHERE t.text LIKE :keyword;
-    """)
-    total_tweets = connection.execute(count_query, {'keyword': f'%{keyword}%'}).scalar()
-    total_pages = (total_tweets + 19) // 20
+        count_query = text("""
+            SELECT COUNT(*)
+            FROM tweets t
+            JOIN users u ON t.id_users = u.id_users
+            WHERE t.text LIKE :keyword;
+        """)
+        total_tweets = connection.execute(count_query, {'keyword': f'%{keyword}%'}).scalar()
+        total_pages = (total_tweets + 19) // 20
 
-    connection.close()
-    
+        connection.close()
+
     username = request.cookies.get('username')
     password = request.cookies.get('password')
     print('username=', username)
@@ -332,5 +317,5 @@ def search():
 
     good_credentials = are_credentials_good(username, password)
     print('good_credentials=', good_credentials)
-    
+
     return render_template('search.html', logged_in=good_credentials, tweets=tweets, current_page=page, total_pages=total_pages, keyword=keyword)
