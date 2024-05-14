@@ -59,7 +59,7 @@ CREATE TABLE tweet_urls (
 
 -- Index to enhance the speed of full-text search on the 'text' column using PostgreSQL's full-text search capabilities
 -- This index is beneficial for more complex text searches that go beyond simple LIKE queries
-CREATE INDEX idx_fts_tweets_text ON tweets USING gin (to_tsvector('english', text));
+CREATE INDEX idx_fts_tweets_text ON tweets USING RUM (to_tsvector('english', text));
 
 -- Index on the foreign key in the 'tweets' table to speed up joins with the 'users' table
 CREATE INDEX idx_tweets_users ON tweets (id_users);
