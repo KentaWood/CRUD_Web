@@ -3,6 +3,13 @@
 [![Docker-Web-Prod](https://github.com/KentaWood/CRUD_Web/actions/workflows/docker-compose.prod.yml/badge.svg)](https://github.com/KentaWood/CRUD_Web/actions/workflows/docker-compose.prod.yml)
 
 
+## Currently Running on AWS EC2
+
+The application can be accessed here: [http://18.218.216.45/](http://18.218.216.45/).
+
+- Make an account and post some tweets! It's always good to get authenticated user data into the application!
+
+
 ## Description
 
 This project is a web application built using Flask and SQLAlchemy, containerized with Docker. It includes features for user authentication, tweet creation, and tweet search. The application is structured to separate development and production environments using Docker Compose.
