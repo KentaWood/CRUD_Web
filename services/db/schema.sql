@@ -38,7 +38,7 @@ CREATE TABLE users (
 -- 'created_at' records the datetime when the tweet was created.
 -- 'text' contains the content of the tweet.
 CREATE TABLE tweets (
-    id_tweets SERIAL BIGINT PRIMARY KEY,
+    id_tweets BIGSERIAL PRIMARY KEY,
     id_users BIGINT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now(),
     text TEXT,
@@ -68,7 +68,7 @@ CREATE INDEX idx_tweets_users ON tweets (id_users);
 -- Especially useful for queries that sort results to show the most recent tweets first
 CREATE INDEX idx_tweets_created_at ON tweets (created_at DESC);
 
-CREATE SEQUENCE tweets_id_tweets_seq;
+-- CREATE SEQUENCE tweets_id_tweets_seq;
 
 
 

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 files=$(find data/*)
-#files="data/geoTwitter21-01-01.zip"
+# files="data/geoTwitter21-01-01.zip"
 
 echo '================================================================================'
 echo 'load pg_normalized'

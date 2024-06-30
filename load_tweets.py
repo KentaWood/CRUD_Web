@@ -149,9 +149,9 @@ def insert_tweet(connection,tweet):
             'withheld_in_countries':tweet.get('withheld_in_countries', None)
             }
         
-        print(par['username'])  # Instead of print(screen_name)
-        print(par['id_users'])  # Instead of print(id_user)
-        print(par['password'])  # Already correct
+        # print(par['username'])  # Instead of print(screen_name)
+        # print(par['id_users'])  # Instead of print(id_user)
+        # print(par['password'])  # Already correct
         
         connection.execute(sql, par)
 
