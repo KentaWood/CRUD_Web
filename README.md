@@ -5,7 +5,7 @@
 
 ## Currently Running on AWS EC2
 
-The application can be accessed here: [http://18.218.216.45/](http://18.218.216.45/).
+The application can be accessed here: (Currently not deployed anymore as of 5/9/2025).
 
 - Make an account and post some tweets! It's always good to get authenticated user data into the application!
 
